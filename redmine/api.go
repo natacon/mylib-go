@@ -3,30 +3,62 @@ package redmine
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"github.com/natacon/mylib-go/common"
 	"log"
-	"net/http"
 	"os"
 	"regexp"
 )
 
 var (
-	RedmineURL string = "http://192.168.27.200/redmine"
+	RedmineUrl string = "http://192.168.27.200/redmine"
 	key        string = os.Getenv("REDMINE_APIKEY")
 	re                = regexp.MustCompile(`\d{4,}`)
 )
 
-func CreateMessage(issues []Issue) (message string) {
-	for _, issue := range issues {
-		message += fmt.Sprintf("%s %s #%d: %s\n%s/issues/%d\n\n",
-			issue.Status.Name, issue.Tracker.Name, issue.ID, issue.Subject, RedmineURL, issue.ID)
+type Redmine struct {
+	Endpoint string
+	ApiKey   string
+}
+
+func (r *Redmine) CreateIssueUrls(issueIds []string) (urls []string) {
+	for _, issueId := range issueIds {
+		url := fmt.Sprintf("%s/issues/%s.json?key=%s", r.Endpoint, issueId, r.ApiKey)
+		if re.MatchString(issueId) {
+			log.Printf("url: %s\n", url)
+			urls = append(urls, url)
+		}
 	}
 	return
 }
 
-func GetURLs(m []string) (urls []string) {
+func (r *Redmine) SelectIssues(urls []string) (issues []Issue, err error) {
+	for _, url := range urls {
+		body, err := common.CallApi("GET", url)
+		if err != nil {
+			return issues, err
+		}
+		var issue Issue
+		issueBody := body[9 : len(body)-1] // issue本体部分にjson文字列を限定する TODO:やめる
+		if err := json.Unmarshal(issueBody, &issue); err != nil {
+			return issues, err
+		} else {
+			issues = append(issues, issue)
+		}
+	}
+	return
+}
+
+func CreateMessage(issues []Issue) (message string) {
+	for _, issue := range issues {
+		message += fmt.Sprintf("%s %s #%d: %s\n%s/issues/%d\n\n",
+			issue.Status.Name, issue.Tracker.Name, issue.ID, issue.Subject, RedmineUrl, issue.ID)
+	}
+	return
+}
+
+func CreateUrls(m []string) (urls []string) {
 	for _, e := range m {
-		url := fmt.Sprintf("%s/issues/%s.json?key=%s", RedmineURL, e, key)
+		url := fmt.Sprintf("%s/issues/%s.json?key=%s", RedmineUrl, e, key)
 		if re.MatchString(e) {
 			log.Printf("url: %s\n", url)
 			urls = append(urls, url)
@@ -35,35 +67,26 @@ func GetURLs(m []string) (urls []string) {
 	return
 }
 
-func GetIssues(urls []string) (issues []Issue) {
+func GetIssues(urls []string) (issues []Issue, err error) {
 	for _, url := range urls {
-		res, err := http.Get(url)
+		body, err := common.CallApi("GET", url)
 		if err != nil {
-			log.Printf("[ERROR] Faild to request: %v", err)
-		} else if res.StatusCode >= 400 {
-			log.Printf("[ERROR] Faild to request: %d", res.StatusCode)
-		} else {
-			body, err := ioutil.ReadAll(res.Body)
-			if err != nil {
-				log.Printf("[ERROR] Faild to read response body: %v", err)
-			} else {
-				var issue Issue
-				issueBody := body[9 : len(body)-1] // issue本体部分にjson文字列を限定する
-				if err := json.Unmarshal(issueBody, &issue); err != nil {
-					log.Printf("[ERROR] Faild to unmarshal: %v", err)
-				} else {
-					issues = append(issues, issue)
-				}
-			}
+			return issues, err
 		}
-		_ = res.Body.Close()
+		var issue Issue
+		issueBody := body[9 : len(body)-1] // issue本体部分にjson文字列を限定する TODO:やめる
+		if err := json.Unmarshal(issueBody, &issue); err != nil {
+			return issues, err
+		} else {
+			issues = append(issues, issue)
+		}
 	}
 	return
 }
 
 // TODO: 未実装
 func extractIssueId(text string) (ids []string) {
-	// TODO: メッセージから数値4桁を全て取得する
+	// TODO: メッセージから数値4桁を全て取得する（それがいいかは別として）
 	//texts = re.findall(r'(?<![0-9])[0-9]{4}(?![0-9])', message.body['text'])
 	re := regexp.MustCompile(`(?<![0-9])[0-9]{4}(?![0-9])`)
 	all := re.FindAllString(text, -1)
