@@ -9,13 +9,13 @@ import (
 
 var endpoint = "http://localhost:8080"
 
-func KickService(activityTypeId int) error {
+func KickService(serviceTypeId int) error {
 	u, _ := url.Parse(endpoint)
 
 	u.Path = path.Join(u.Path, "api", "activity")
 
 	query := u.Query()
-	query.Set("serviceTypeId", strconv.Itoa(activityTypeId))
+	query.Set("serviceTypeId", strconv.Itoa(serviceTypeId))
 	query.Set("loginid", "90101")
 	query.Set("password", "password")
 	u.RawQuery = query.Encode()
