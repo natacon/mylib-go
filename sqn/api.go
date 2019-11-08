@@ -7,9 +7,7 @@ import (
 	"strconv"
 )
 
-var endpoint = "http://localhost:8080"
-
-func KickService(serviceTypeId int) error {
+func KickService(endpoint string, serviceTypeId int) error {
 	u, _ := url.Parse(endpoint)
 
 	u.Path = path.Join(u.Path, "api", "activity")
