@@ -3,7 +3,7 @@ package redmine
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/natacon/mylib-go/common"
+	"github.com/natacon/mylib-go/restapi"
 	"log"
 	"os"
 	"regexp"
@@ -33,7 +33,10 @@ func (r *Redmine) CreateIssueUrls(issueIds []string) (urls []string) {
 
 func (r *Redmine) SelectIssues(urls []string) (issues []Issue, err error) {
 	for _, url := range urls {
-		body, err := common.CallApi("GET", url)
+		body, err := restapi.CallApi(restapi.ApiRequest{
+			Method: "GET",
+			Url:    url,
+		})
 		if err != nil {
 			return issues, err
 		}
@@ -69,7 +72,10 @@ func CreateUrls(m []string) (urls []string) {
 
 func GetIssues(urls []string) (issues []Issue, err error) {
 	for _, url := range urls {
-		body, err := common.CallApi("GET", url)
+		body, err := restapi.CallApi(restapi.ApiRequest{
+			Method: "GET",
+			Url:    url,
+		})
 		if err != nil {
 			return issues, err
 		}
