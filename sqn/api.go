@@ -10,7 +10,7 @@ import (
 func KickService(endpoint string, serviceTypeId int) error {
 	u, _ := url.Parse(endpoint)
 
-	u.Path = path.Join(u.Path, "restapi", "activity")
+	u.Path = path.Join(u.Path, "api", "activity")
 
 	query := u.Query()
 	query.Set("serviceTypeId", strconv.Itoa(serviceTypeId))

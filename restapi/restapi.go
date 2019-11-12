@@ -31,9 +31,9 @@ func CallApi(apiRequest ApiRequest) ([]byte, error) {
 	client := http.Client{}
 	resp, e := client.Do(req)
 	if e != nil {
-		return nil, fmt.Errorf("[ERROR] Faild to apiRequest: %v", e)
+		return nil, fmt.Errorf("[ERROR] Faild to request: %v", e)
 	} else if resp.StatusCode >= 400 {
-		return nil, fmt.Errorf("[ERROR] Faild to apiRequest: %d", resp.StatusCode)
+		return nil, fmt.Errorf("[ERROR] Faild to request: %d", resp.StatusCode)
 	}
 	defer resp.Body.Close()
 	//

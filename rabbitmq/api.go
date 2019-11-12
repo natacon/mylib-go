@@ -13,7 +13,7 @@ import (
 func getQueues() (Queues, error) {
 	preUnmarshalQueues, err := restapi.CallApi(restapi.ApiRequest{
 		Method: "GET",
-		Url:    "http://192.168.56.101:15672/restapi/queues",
+		Url:    "http://192.168.56.101:15672/api/queues",
 		BasicAuth: restapi.BasicAuth{
 			Username: "guest",
 			Password: "guest",
