@@ -17,7 +17,7 @@ type BasicAuth struct {
 	Password string
 }
 
-// ベーシック認証を行う必要があるリクエストかを返す
+// ベーシック認証を行う必要があるリクエストであるかを返す
 // username,password両方を指定している場合にtrueを返す。
 func (r *ApiRequest) needBasicAuth() bool {
 	return r.BasicAuth.Username != "" && r.BasicAuth.Password != ""
