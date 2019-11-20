@@ -225,8 +225,8 @@ var errSuperTypeNotFound = errors.New("SuperType is not found.")
 
 // targetTypeに指定したtypeのsupertypeを検索して返却する。
 // 最上位クラスをtargetTypeに指定した場合はerrorに errSuperTypeNotFound を返却する。
-func (targetType *Type) FindSuperType(allTypes []Type) (Type, error) {
-	for _, t := range allTypes {
+func (targetType *Type) FindSuperType() (Type, error) {
+	for _, t := range cachedAllType {
 		if targetType.Supertype.Name == t.Name {
 			return t, nil
 		}
@@ -235,61 +235,63 @@ func (targetType *Type) FindSuperType(allTypes []Type) (Type, error) {
 }
 
 // 全親クラスのsupertypeを検索して返す。
-func (targetType *Type) FindAllSuperType(allTypes []Type) []Type {
-	return targetType.findSuperTypeRecursively(allTypes, nil)
+func (targetType *Type) FindAllSuperType() []Type {
+	return targetType.findSuperTypeRecursively(nil)
 }
 
 // 全親クラスのsupertypeを検索して返す。
-func (targetType *Type) findSuperTypeRecursively(allTypes []Type, superTypes []Type) []Type {
-	superType, _ := targetType.FindSuperType(allTypes)
+func (targetType *Type) findSuperTypeRecursively(superTypes []Type) []Type {
+	superType, _ := targetType.FindSuperType()
 	// superTypeがないなら終わり
 	if superType.Name == "" {
 		return superTypes
 	}
 	superTypes = append(superTypes, superType)
-	return superType.findSuperTypeRecursively(allTypes, superTypes)
+	return superType.findSuperTypeRecursively(superTypes)
 }
 
 // targetTypeに指定したtypeの最上位typeを検索して返却する。
 // targetTypeが最上位クラスの場合、自身を返す。
-func (targetType *Type) FindTopSuperType(allTypes []Type) (topSuperType *Type) {
-	superType, err := targetType.FindSuperType(allTypes)
+func (targetType *Type) FindTopSuperType() (topSuperType *Type) {
+	superType, err := targetType.FindSuperType()
 	if err != nil {
 		return targetType
 	}
 
 	// まだ上位クラスがある場合、親クラスを再帰的に検索する。
-	return superType.FindTopSuperType(allTypes)
+	return superType.FindTopSuperType()
 }
 
-// メタメタ定義のjsonフォルダの全ファイルを読み込み、それらを構造体のリストにして返却する。
-func readAllMetaJson(dir string) ([]Type, error) {
+var cachedAllType []Type
+
+// メタメタ定義のjsonフォルダの全ファイルを読み込み、それらを構造体のリスト（cachedAllType）に格納する。
+// cachedAllTypeはTypeのメソッド内で対象のTypeを検索するために都度利用される。
+func readAllMetaJson(dir string) error {
 	// メタメタ定義のjsonフォルダの全ファイルを読み込む
 	files, err := ioutil.ReadDir(dir)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	// jsonファイルを読み込み、構造体のリストへと変換する
-	var types []Type
 	for _, file := range files {
 		filePath := filepath.Join(dir, file.Name())
 		bytes, err := ioutil.ReadFile(filePath)
 		if err != nil {
-			return nil, err
+			return err
 		}
 		var meta Type
 		err = json.Unmarshal(bytes, &meta)
 		if err != nil {
-			return nil, err
+			return err
 		}
-		types = append(types, meta)
+		cachedAllType = append(cachedAllType, meta)
 	}
-	return types, nil
+	return nil
 }
 
-func FindType(typeName string, allTypes []Type) (Type, error) {
-	for _, t := range allTypes {
+func FindTypeByName(typeName string) (Type, error) {
+	for _, t := range cachedAllType {
 		if t.Name == typeName {
 			return t, nil
 		}

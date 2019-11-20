@@ -29,18 +29,17 @@ func KickService(endpoint string, serviceTypeId int) error {
 
 // TODO: 処理を分ける
 // TODO: 実装場所も変える？
-func CreateInheritedEnumValueSql(enumValueName string) (string, error) {
-	allTypes, err := readAllMetaJson("C:/sqn/rest/src/main/resources/json")
-	if err != nil {
+func CreateInheritedEnumValueSql(enumValueName string, dir string) (string, error) {
+	if err := readAllMetaJson(dir); err != nil {
 		return "", err
 	}
 
 	// supertypeを探すために検索対象のもとになるtypeを取得しておく
-	targetType, err := FindType(enumValueName, allTypes)
+	targetType, err := FindTypeByName(enumValueName)
 	if err != nil {
 		return "", err
 	}
-	superTypes := targetType.FindAllSuperType(allTypes)
+	superTypes := targetType.FindAllSuperType()
 
 	// 自身のtype、自身の全親クラスのtypeを条件にしたENUMVALUEテーブルを検索するクエリを整形する
 	sqlStr := fmt.Sprintf("SELECT * FROM ENUMVALUE WHERE TYPE_OID IN (%d", targetType.Oid)
