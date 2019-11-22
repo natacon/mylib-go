@@ -8,7 +8,8 @@ import (
 	"strconv"
 )
 
-func KickService(endpoint string, serviceTypeId int) error {
+// TODO: endpoint, tenantId, loginid, passwordは外部設定ファイル化する
+func KickService(endpoint string, tenantId int, serviceTypeId int, body string) error {
 	u, _ := url.Parse(endpoint)
 
 	u.Path = path.Join(u.Path, "api", "activity")
@@ -17,14 +18,19 @@ func KickService(endpoint string, serviceTypeId int) error {
 	query.Set("serviceTypeId", strconv.Itoa(serviceTypeId))
 	query.Set("loginid", "90101")
 	query.Set("password", "password")
-	query.Set("tenantId", "1001")
+	query.Set("tenantId", strconv.Itoa(tenantId))
 	u.RawQuery = query.Encode()
 
 	_, e := restapi.CallApi(restapi.ApiRequest{
 		Method: "POST",
 		Url:    u.String(),
+		Body:   body,
 	})
 	return e
+}
+
+func 組み立てqueryparameter() {
+
 }
 
 // TODO: 処理を分ける

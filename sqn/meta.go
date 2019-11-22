@@ -221,8 +221,6 @@ type Type struct {
 	UpdateTs          string        `json:"updateTs"`
 }
 
-var errSuperTypeNotFound = errors.New("SuperType is not found.")
-
 // targetTypeに指定したtypeのsupertypeを検索して返却する。
 // 最上位クラスをtargetTypeに指定した場合はerrorに errSuperTypeNotFound を返却する。
 func (targetType *Type) FindSuperType() (Type, error) {
@@ -231,7 +229,7 @@ func (targetType *Type) FindSuperType() (Type, error) {
 			return t, nil
 		}
 	}
-	return Type{}, errSuperTypeNotFound
+	return Type{}, errors.New("SuperType is not found.")
 }
 
 // 全親クラスのsupertypeを検索して返す。
@@ -252,7 +250,7 @@ func (targetType *Type) findSuperTypeRecursively(superTypes []Type) []Type {
 
 // targetTypeに指定したtypeの最上位typeを検索して返却する。
 // targetTypeが最上位クラスの場合、自身を返す。
-func (targetType *Type) FindTopSuperType() (topSuperType *Type) {
+func (targetType *Type) FindTopSuperType() *Type {
 	superType, err := targetType.FindSuperType()
 	if err != nil {
 		return targetType
@@ -261,6 +259,8 @@ func (targetType *Type) FindTopSuperType() (topSuperType *Type) {
 	// まだ上位クラスがある場合、親クラスを再帰的に検索する。
 	return superType.FindTopSuperType()
 }
+
+type Types []Type
 
 var cachedAllType []Type
 

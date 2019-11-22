@@ -1,8 +1,10 @@
 package restapi
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 )
 
@@ -10,6 +12,7 @@ type ApiRequest struct {
 	Method    string
 	Url       string
 	BasicAuth BasicAuth
+	Body      string
 }
 
 type BasicAuth struct {
@@ -24,7 +27,8 @@ func (r *ApiRequest) needBasicAuth() bool {
 }
 
 func CallApi(apiRequest ApiRequest) ([]byte, error) {
-	req, _ := http.NewRequest(apiRequest.Method, apiRequest.Url, nil)
+	log.Printf("Call api=%+v\n", apiRequest)
+	req, _ := http.NewRequest(apiRequest.Method, apiRequest.Url, bytes.NewBufferString(apiRequest.Body))
 	if apiRequest.needBasicAuth() {
 		req.SetBasicAuth(apiRequest.BasicAuth.Username, apiRequest.BasicAuth.Password)
 	}
